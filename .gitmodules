@@ -1,7 +1,7 @@
 [submodule "matrix"]
 	path = matrix
 	url = https://github.com/hzeller/rpi-rgb-led-matrix.git
-[submodule "custom-virtual-gamepads"]
+[submodule "custom_virtual_gamepads"]
 	path = custom_virtual_gamepads
 	url = https://github.com/hyamanieu/node-custom-virtual-gamepads.git
-    branch = custom-virtual-gamepads
+	branch = custom-virtual-gamepads
