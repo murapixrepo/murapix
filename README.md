@@ -253,6 +253,11 @@ sys.path.append(murapix_path)
 from murapix.murapix import Murapix, get_panel_adresses,get_deadzone_addresses
 ```
 
+### Example
+
+an example game using the virtual gamepad can be found there: https://github.com/murapixrepo/amiral_8btn
+
+
 # contributing
 
 Issues and PR are welcome.
