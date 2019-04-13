@@ -53,6 +53,7 @@ Notably the note about disabling the sound.
 If you intend to use only the demo mode, you may not need to build
 the python3 binding, and you should not disable the sound.
 
+
 ### Build the virtual gamepad
 
 The original node-virtual-gamepads can be found [here][jehervygamepad].
@@ -266,6 +267,7 @@ To be improved:
   - Make it more efficient (current FPS for 6 64*64 LED matrices hovers below 60 on a RPi 3B+), eventualy avoid the python binding from hzeller.
   - Avoid using numpy to find largest rectangles
   - Use a more interactive gamepad, eventualy changing to epeios-q37 atlas solution: https://github.com/epeios-q37/atlas-python
+  - Accept 3 channels of LED matrices rather than only 1.
   - Make it more elegant?
 
 # credits and license
