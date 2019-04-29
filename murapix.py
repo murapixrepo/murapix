@@ -59,7 +59,7 @@ import pygame.locals as pgl
 from PIL import Image
 try:
     from .custom_virtual_gamepads import set_up_gamepad
-except ImportError:#if doing screen test
+except (ImportError, SystemError) as e:#if doing screen test
     from custom_virtual_gamepads import set_up_gamepad
 import signal
 
@@ -73,9 +73,9 @@ def init_pygame_display(width, height):
   os.putenv('SDL_VIDEODRIVER', 'fbcon')
   os.environ["SDL_VIDEODRIVER"] = "dummy"
   pygame.init()
-  pygame.display.set_mode((width, height), 0, 24)
-  return pygame.display.get_surface()
-
+  #pygame.display.set_mode((width, height), 0, 24)
+  #return pygame.display.get_surface()
+  return pygame.Surface((width, height))
 
 
 def process_input_arg(argv):
@@ -322,7 +322,8 @@ class Murapix:
         if self.gamepad:
             try:
                 self.start_gamepad()
-            except Exception as e:   
+            except Exception as e:
+                print("Error starting gamepad") 
                 print(e)         
                 self.close()
                 raise e
@@ -445,6 +446,7 @@ class Murapix:
             try:
                 os.killpg(os.getpgid(self.p.pid), signal.SIGTERM)
             except Exception as e:
+                print("Error trying to kill gamepad node and its children")
                 print(e)
                 
             

@@ -20,19 +20,17 @@ desktop!
 
 First clone the package recursively
 
-`git clone --recurse-submodules -j4 https://hyamanieu@bitbucket.org/murapix/murapix.git`
+`git clone --recurse-submodules -j4 https://github.com/murapixrepo/murapix.git`
 
 The package contains two submodules:
  * hzeller code to control the LED panels
  * a modified node virtual gamepad that produces virtual gamepads
  served on the local network.
  
-
  
 ### Build hzeller binding
 
 You need to build the [python3 binding][pythonbinding].
-
 
   
 First, cd into the right path:
