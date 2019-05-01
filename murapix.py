@@ -275,9 +275,9 @@ class Murapix:
         signal.signal(signal.SIGINT, self.quit_gracefully)
         signal.signal(signal.SIGTERM,self.quit_gracefully)
         print("""    murapix  Copyright (C) 2019  hy@amani.eu
-    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+    This program comes with ABSOLUTELY NO WARRANTY.
     This is free software, and you are welcome to redistribute it
-    under certain conditions; type `show c' for details.""")#LICENSE
+    under certain conditions.""")#LICENSE
         
         if not demo:
             #must be a raspberry pi configured for murapix, hence nodename
@@ -371,7 +371,9 @@ class Murapix:
         
         py_im = pygame.image.tostring(screen, "RGB",False)
         pil_im = Image.frombytes("RGB",screen.get_size(),py_im)
-        self.matrix.SetImage(pil_im)
+        double_buffer = self.matrix.CreateFrameCanvas()
+        double_buffer.SetImage(pil_im)
+        self.matrix.SwapOnVSync(double_buffer)
         
     def start_gamepad(self):
         assert os.path.isfile(self.gamepad), "self.gamepad must be a path to an SVG file"
