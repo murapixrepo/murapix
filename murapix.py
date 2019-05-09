@@ -292,6 +292,7 @@ class Murapix:
             options = RGBMatrixOptions()
             options.rows = options.cols = led_rows
             #TODO: accept up to 3 parallel chains
+            #TODO: invert image
             options.parallel = 1
             options.chain_length = max_number_of_panels
             options.hardware_mapping = 'regular'
