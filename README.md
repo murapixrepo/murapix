@@ -112,7 +112,7 @@ your screens should now show their number (as configured in the ini file)
 
 
 
-### config file
+### Config file
 
 The config file is meant to describe your murapix hardware, i.e. how your 
 panels are laid out and how many leds they have. IMPORTANT: all panels
@@ -124,9 +124,12 @@ the config file must always contain a 'matrix' section with the following
  * mapping: several lines of coma separated values. A value must be a '.', 
     indicating an empty place, or an integer. The integers must form a 
     sequence from 1 to the total number of panels. Panel 1 is the first
-    panel connected to the RPi hat, 2 the next in the chain, and so on.
+    panel the furthest to the RPi hat connected on channel 1, 2 the next 
+    in the chain, and so on.
  * led-rows: the number of leds per row for each panel
  * led-cols: the number of leds per column for each panel
+ * parallel (optional): how many channels you are using (from 1 to 3). The number of 
+    pannels per chain must be the same. Default is 1.
   
  
 Example (see also example_murapix_config.ini):
@@ -265,7 +268,6 @@ To be improved:
   - Make it more efficient (current FPS for 6 64*64 LED matrices hovers below 60 on a RPi 3B+), eventualy avoid the python binding from hzeller.
   - Avoid using numpy to find largest rectangles
   - Use a more interactive gamepad, eventualy changing to epeios-q37 atlas solution: https://github.com/epeios-q37/atlas-python
-  - Accept 3 channels of LED matrices rather than only 1.
   - Make it more elegant?
 
 # credits and license
