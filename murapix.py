@@ -147,11 +147,20 @@ def get_config(configfile):
     led_rows = config.getint('matrix','led-rows')
     led_cols = config.getint('matrix','led-cols')
     assert (led_rows==led_cols), "For now, murapix can only control square led panels"
-    
+    #TODO: check if non-square pannels work
     width = number_of_cols * led_cols
     height = number_of_rows * led_rows
     
-    return mapping, width, height, max_number_of_panels, led_rows
+    if config.has_option('matrix','parallel'):
+        parallel = config.getint('matrix','parallel')
+        err_msg = ("Each channel must have the same number of pannels:\n"
+                   "{} total number of pannels for {} channels".format(max_number_of_panels, 
+                                                                       parallel))
+        assert max_number_of_panels%parallel == 0, err_msg
+    else:
+        parallel = 1
+    
+    return mapping, width, height, max_number_of_panels, led_rows, led_cols, parallel
     
     
 def get_largest_rect(mapping, key='surface'):
@@ -260,7 +269,8 @@ class Murapix:
     """
     def __init__(self):
         configfile, demo = process_input_arg(sys.argv)
-        mapping, width, height, max_number_of_panels, led_rows = get_config(configfile)
+        (mapping, width, height, max_number_of_panels, 
+         led_rows, led_cols, parallel) = get_config(configfile)
         self.RUNNING = True
         self.mapping = mapping
         self.demo = demo
@@ -268,8 +278,11 @@ class Murapix:
         self.height = height
         self.max_number_of_panels = max_number_of_panels
         self.led_rows = led_rows
+        self.led_cols = led_cols
+        self.parallel = parallel
         self.scratch = pygame.Surface((width, height))
         self.gamepad = None
+        
         
         #signal handlers to quite gracefully
         signal.signal(signal.SIGINT, self.quit_gracefully)
@@ -286,20 +299,24 @@ class Murapix:
                 raise EnvironmentError("Not a murapix, please select demo mode with --demo=X")
             
             print('Going on the Murapix!')
-            print('Channel 1 of {0}*{1}={2}'.format(max_number_of_panels,led_rows,max_number_of_panels*led_rows))
+            print('{0} channel(s) of [{1}*{2}={3} LED] X [{4} LED]'.format(parallel,
+                                                     max_number_of_panels//parallel,
+                                                     led_rows,
+                                                     max_number_of_panels*led_rows//parallel,
+                                                     led_cols))
             #the screen is just a single line of panels
             
             options = RGBMatrixOptions()
             options.rows = options.cols = led_rows
-            #TODO: accept up to 3 parallel chains
-            #TODO: invert image
-            options.parallel = 1
-            options.chain_length = max_number_of_panels
+            options.parallel = parallel
+            options.chain_length = max_number_of_panels//parallel
             options.hardware_mapping = 'regular'
             options.drop_privileges = 0
             self.matrix = RGBMatrix(options = options)
-            self._screen = init_pygame_display(max_number_of_panels*led_rows, 
-                                              led_rows)
+            
+            self.double_buffer = self.matrix.CreateFrameCanvas()
+            self._screen = init_pygame_display((max_number_of_panels//parallel)*led_rows, 
+                                              led_cols*parallel)
         else:      
             print('Going on the standart screen...')      
             pygame.init()
@@ -356,25 +373,37 @@ class Murapix:
         screen = self._screen
         mapping = self.mapping
         led_rows = self.led_rows
+        led_cols = self.led_cols
+        parallel = self.parallel
+        curr_chain_row = 0
+        NoP_per_chain = int(self.max_number_of_panels/parallel)
         
         #now blit each simulated panel in a row onto screen in the order 
-        #indicated by the mapping in the config file.        
+        #indicated by the mapping in the config file.   
+        #TODO: may be more efficient by vectorizing & using blits() instead of blit()
         for i, n in enumerate(mapping):#x, rows
             for j, m in enumerate(n):#y, panel number
                 if m is None:
                     continue
+                #find in which chain "m" is
+                curr_chain_row = int((m-1)/NoP_per_chain)
+                
+                #print into a square that fits hzeller doc led addressing
+                #see https://github.com/hzeller/rpi-rgb-led-matrix/blob/master/wiring.md#chains                
                 screen.blit(scratch,#surface to take from
                             #LED (row,col) on the lined up panels
-                            (led_rows*(m-1),0),
+                            (led_rows*((m-(NoP_per_chain*curr_chain_row))-1),
+                             curr_chain_row*led_cols),
                             #rectangle to extract from the width*height scratch surface
                             area=pygame.Rect((led_rows*j,led_rows*i),
                                              (led_rows,led_rows)))
+                
+                
         
         py_im = pygame.image.tostring(screen, "RGB",False)
         pil_im = Image.frombytes("RGB",screen.get_size(),py_im)
-        double_buffer = self.matrix.CreateFrameCanvas()
-        double_buffer.SetImage(pil_im)
-        self.matrix.SwapOnVSync(double_buffer)
+        self.double_buffer.SetImage(pil_im)
+        self.matrix.SwapOnVSync(self.double_buffer)
         
     def start_gamepad(self):
         assert os.path.isfile(self.gamepad), "self.gamepad must be a path to an SVG file"
