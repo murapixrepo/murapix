@@ -298,7 +298,7 @@ class Murapix:
             #must be "rpi-murapix"
             if os.uname().nodename not in ("rpi-murapix","raspberrypi"):
                 raise EnvironmentError("Not a murapix, please select demo mode with --demo=X")
-            
+            from rgbmatrix import RGBMatrix, RGBMatrixOptions
             print('Going on the Murapix!')
             print('{0} channel(s) of [{1}*{2}={3} LED] X [{4} LED]'.format(parallel,
                                                      max_number_of_panels//parallel,
