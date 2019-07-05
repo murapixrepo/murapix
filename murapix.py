@@ -199,8 +199,7 @@ def get_largest_rect_add(led_rows, m,n=None,key='surface'):
     """
     Returns the pixel/led address of the largest rectangle using pygame standard:
         ((left, top), (width, height))
-    
-    
+        
     ____
     usage
     ____
@@ -433,7 +432,7 @@ class Murapix:
             
         N = 30
         queue = deque(maxlen=N)
-        thread = start_thread(consume, p.stdout, queue.append)
+        thread = start_thread(consume, self.p.stdout, queue.append)
         
         rect_area = get_largest_rect_add(self.led_rows,self.mapping)
         ((left, top),(width, height)) = rect_area
@@ -447,46 +446,58 @@ class Murapix:
         
         #init wait screen
         still_loading = True
-        c = "Loading"
+        c = "Loading..."
         texts = [font.render(c[0:i+1],
                            False,
                            (255,255,255),
                            (0,0,0)) for i in range(len(c))]
     
-        tw , th = font.size("Loading")
+        tw , th = font.size(c)
         pick = -1
         current_im = -1
         #show loading screen until listening
         while still_loading:
             current_im += 1
-            if current_im > self.fps//2:
+            if current_im > self.fps//6:
+				
+                print('\r  {0}:  {1}'.format(current_im, texts[pick]), end='')
                 current_im = 0
-                pick = (pick + 1) % len(c) 
+                pick = (pick + 1) % len(c)
             self.clock.tick(self.fps)           
             
             
             text = texts[pick]
-            self.scratch.blit(text,(left+(width-tw)//2,top))
+            self.scratch.fill((0,0,0))
+            self.scratch.blit(text,(left+(width-tw)//2,top+fontsize))
             draw()
-            
-            if b"
+            #print('\r  {0}'.format(queue), end='')
+            for q in queue:
+                if b"info: Listening on 5000" in q:
+                    still_loading = False
             
             
         
         current_im = -1
-        
+        text = font.render("Connect to",
+                           False,
+                           (255,255,255),
+                           (0,0,0))
+        text_end0 = font.render("murapix:5000",
+                                     False,
+                                     (255,255,255),
+                                     (0,0,0))
         while current_im < 3*self.fps:#show what to do for 3 sec
+            self.clock.tick(self.fps)
             current_im += 1
-            tw , th = font.size("Players connected:")
-            self.scratch.blit(text,(left+(width-tw)//2,top))
-            self.scratch.blit(text_NoP,(left+width//2,top+1*fontsize))
-            tw , th = font.size("Press any key")
+            self.scratch.fill((0,0,0))
+            tw , th = font.size("Connect to")
+            self.scratch.blit(text,(left+(width-tw)//2,top+fontsize))
+            tw , th = font.size("murapix:5000")
             self.scratch.blit(text_end0,(left+(width-tw)//2,top+2*fontsize))
-            tw , th = font.size(" to start")
-            self.scratch.blit(text_end1,(left+(width-tw)//2,top+3*fontsize))
             draw()
+            print("\r {0}".format(current_im), end='')
             
-        
+        print("hello!")
         not_selected = True
         no_gamepad = True
         active_joystick = False
@@ -527,6 +538,7 @@ class Murapix:
                     print('{} players selected'.format(NoJS))
             
             
+            self.scratch.fill((0,0,0))
             tw , th = font.size("Players connected:")
             self.scratch.blit(text,(left+(width-tw)//2,top))
             self.scratch.blit(text_NoP,(left+width//2,top+1*fontsize))
