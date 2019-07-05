@@ -313,6 +313,7 @@ class Murapix:
             options.chain_length = max_number_of_panels//parallel
             options.hardware_mapping = 'regular'
             options.drop_privileges = 0
+            options.brightness = 60 #too bright for indoor use
             self.matrix = RGBMatrix(options = options)
             
             self.double_buffer = self.matrix.CreateFrameCanvas()
