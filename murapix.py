@@ -57,6 +57,8 @@ import sys
 import pygame
 import pygame.locals as pgl
 from PIL import Image
+from collections import deque
+from threading import Thread
 try:
     from .custom_virtual_gamepads import set_up_gamepad
 except (ImportError, SystemError) as e:#if doing screen test
@@ -66,7 +68,7 @@ import signal
 
 CURRDIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(CURRDIR, 'matrix','bindings','python'))
-from rgbmatrix import RGBMatrix, RGBMatrixOptions
+#from rgbmatrix import RGBMatrix, RGBMatrixOptions
 
 
 def init_pygame_display(width, height):
@@ -414,14 +416,81 @@ class Murapix:
         
         
     def draw_select_gamepads(self):
+        #TODO : check if close_fds in custom virtual gamepad allowed for thread to stop when Popen subprocess is killed.
+        #TODO : finish animation to wait for gamepad to run
+        #functions to read last output lines from virtual gamepad
+        #needed to check status
+        def start_thread(func, *args):
+            t = Thread(target=func, args=args, name="node_gamepad_output_reader")
+            t.daemon = True
+            t.start()
+            return t
+        
+        def consume(infile, output):
+            for line in iter(infile.readline, ''):
+                output(line)
+            infile.close()
+            
+        N = 30
+        queue = deque(maxlen=N)
+        thread = start_thread(consume, p.stdout, queue.append)
+        
         rect_area = get_largest_rect_add(self.led_rows,self.mapping)
         ((left, top),(width, height)) = rect_area
+        fontsize = 3*width//18-1
+        font = pygame.font.Font(None, fontsize)
+        
+        if self.demo:
+            draw = self.draw_demo
+        else:
+            draw = self.draw_murapix
+        
+        #init wait screen
+        still_loading = True
+        c = "Loading"
+        texts = [font.render(c[0:i+1],
+                           False,
+                           (255,255,255),
+                           (0,0,0)) for i in range(len(c))]
+    
+        tw , th = font.size("Loading")
+        pick = -1
+        current_im = -1
+        #show loading screen until listening
+        while still_loading:
+            current_im += 1
+            if current_im > self.fps//2:
+                current_im = 0
+                pick = (pick + 1) % len(c) 
+            self.clock.tick(self.fps)           
+            
+            
+            text = texts[pick]
+            self.scratch.blit(text,(left+(width-tw)//2,top))
+            draw()
+            
+            if b"
+            
+            
+        
+        current_im = -1
+        
+        while current_im < 3*self.fps:#show what to do for 3 sec
+            current_im += 1
+            tw , th = font.size("Players connected:")
+            self.scratch.blit(text,(left+(width-tw)//2,top))
+            self.scratch.blit(text_NoP,(left+width//2,top+1*fontsize))
+            tw , th = font.size("Press any key")
+            self.scratch.blit(text_end0,(left+(width-tw)//2,top+2*fontsize))
+            tw , th = font.size(" to start")
+            self.scratch.blit(text_end1,(left+(width-tw)//2,top+3*fontsize))
+            draw()
+            
+        
         not_selected = True
         no_gamepad = True
         active_joystick = False
-        fontsize = 3*width//18-1
         top = top + (height-fontsize*4)//2
-        font = pygame.font.Font(None, fontsize)
         text = font.render("Players connected:",
                            False,
                            (255,255,255),
@@ -435,10 +504,6 @@ class Murapix:
                                      (255,255,255),
                                      (0,0,0))
         
-        if self.demo:
-            draw = self.draw_demo
-        else:
-            draw = self.draw_murapix
         
         while not_selected:
             self.clock.tick(self.fps)
